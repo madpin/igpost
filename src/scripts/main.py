@@ -1,12 +1,12 @@
+import pprint
 import time
 
 import click
 import keyring
-import climage
 
 from src.db import db
 from src.photo import image
-import pprint
+from src.tasks.tasks import do_your_magic, get_open_tasks
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -114,7 +114,7 @@ menu_obj = [
     {
         "key": "Tasks",
         "summary": "Schedule tasks",
-        "func": lambda: print("This is another test function"),
+        # "func": lambda: print("This is another test function"),
         "menu": [
             {
                 "summary": "Post a photo to Instagram",
@@ -124,12 +124,16 @@ menu_obj = [
                 "summary": "Get a followers snapshot",
                 "func": lambda: print("followers snapshot"),
             },
+            {
+                "summary": "Playground",
+                "func": lambda: print(do_your_magic()),
+            },
         ],
     },
     {
         "key": "Tests",
         "summary": "Test Tasks",
-        "func": lambda: print("This is another test function"),
+        # "func": lambda: print("This is another test function"),
         "menu": [
             {
                 "summary": "Test Ig Account Login",
@@ -158,7 +162,7 @@ menu_obj = [
         ],
     },
     {
-        "key": "Text 2",
+        "key": "Setup",
         "summary": "Setup and configure your account",
         # 'func': _menu_config,
         "menu": [
@@ -184,7 +188,6 @@ def menu(ctx, p1=None, p2=None, p3=None):
 
     cur_menu = menu_obj
     for p in [p1, p2, p3]:
-        print(len(cur_menu))
         if p is not None:
             ob = cur_menu[int(p) - 1]
             if "func" in ob:
@@ -269,13 +272,35 @@ def exif_info(filename):
 
 
 @cli1_4.command()
-@click.argument("filename")
-def print_in_console(filename):
+# @click.argument("filename")
+def print_in_console():
 
     # converts the image to print in terminal
     # inform of ANSI Escape codes
-    output = climage.convert(filename)
-    print(output)
+    # click.echo()
+
+    images = image.get_all_images()
+    print(len(images))
+    from prettytable import PrettyTable
+    COLUMNS_NUM = 3
+    
+
+    t = PrettyTable(f"Column {i+1}" for i in range(COLUMNS_NUM))
+
+    arr = []
+    for i, img in enumerate(images):
+        if(img.notes is None):
+            bitmap = image.cli_print(img.original_filepath)
+            image.save_bitmap(img, bitmap)
+        else:
+            bitmap = img.notes
+        arr.append(f"Image Id: {img.id}\n" + bitmap)
+        if (i+1) % COLUMNS_NUM == 0 and len(arr) > 0:
+            t.add_row(arr)
+            arr = []
+    if len(arr) > 0:
+        t.add_row(arr+['']*(COLUMNS_NUM-len(arr)))
+    print(t)
 
 
 # @g1_2.command()

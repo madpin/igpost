@@ -1,8 +1,10 @@
 from tkinter import N
+
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -10,7 +12,6 @@ from sqlalchemy import (
     Table,
     event,
     text,
-    Enum,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
@@ -235,14 +236,17 @@ class Task(Base):
     scheduled = Column(Boolean, nullable=False, default=False)
     schedule_dt = Column(DateTime, nullable=True, default=None)
 
-    type = Column(Enum("post", "story", "print_notes"), nullable=False)
+    task_type = Column(Enum("post", "story", "print_notes"), nullable=True)
 
     trying = Column(Boolean, nullable=False, default=False)
     trying_dt = Column(DateTime, nullable=True, default=None)
     tries_done = Column(Integer, nullable=False, default=0)
     tries_todo = Column(Integer, nullable=False, default=0)
     done = Column(Boolean, nullable=False, default=False)
-    has_giveup = Column(Boolean, nullable=True, default=None)
+    has_giveup = Column(Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+        return f"<Task(id='{self.id}' type='{self.task_type}')>"
 
 
 event.listen(Task.__table__, "after_create", after_create_post)
