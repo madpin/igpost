@@ -1,0 +1,8 @@
+click
+# loguru
+stackprinter
+SQLAlchemy
+sqlalchemy-migrate
+pre-commit
+keyring
+Pillow
