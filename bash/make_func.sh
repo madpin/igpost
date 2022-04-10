@@ -8,8 +8,8 @@
 
 function update_deps() {
     echo "###############################################################"
-    pip-compile --emit-index-url --upgrade --output-file=requirements.frozen requirements.in
-    pip-compile --emit-index-url --upgrade --output-file=requirements.dev requirements.dev.in
+    pip-compile --upgrade --output-file=requirements.frozen requirements.in
+    pip-compile --upgrade --output-file=requirements.dev requirements.dev.in
 }
 
 # function list_ps() {

@@ -27,3 +27,14 @@ Read: https://opensource.com/article/17/5/4-practical-python-libraries
 
 https://docs.sqlalchemy.org/en/14/dialects/sqlite.html
 </details>
+
+TODO:
+
+endpoints:
+- Insert Image
+- Process image
+- Create Post
+- Attach Hashtag Group to Post
+- Attach Hashtag to Post (maybe create a custom group)
+- Upsert Hashtag adding to Group
+- Post Image to IG

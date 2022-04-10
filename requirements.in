@@ -1,8 +1,11 @@
 click
-# loguru
 stackprinter
 SQLAlchemy
 sqlalchemy-migrate
 pre-commit
 keyring
 Pillow
+prettytable
+instagrapi
+bcrypt
+climage

@@ -4,12 +4,9 @@
 #
 #    pip-compile --output-file=requirements.dev requirements.dev.in
 #
---index-url http://pypi.org/simple
 --extra-index-url https://nexus.corp.indeed.com/repository/pypi/simple
 --trusted-host pypi.org
 
-click==7.1.2
-    # via pip-tools
 configparser==4.0.2
     # via importlib-metadata
 contextlib2==0.6.0.post1
@@ -37,8 +34,6 @@ pathlib2==2.3.7.post1
     #   importlib-metadata
     #   importlib-resources
     #   virtualenv
-pip-tools==5.5.0
-    # via -r requirements.dev.in
 platformdirs==2.0.2
     # via virtualenv
 pluggy==0.13.1

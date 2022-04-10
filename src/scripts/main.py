@@ -1,14 +1,26 @@
+# from email.policy import default
 import pprint
-import time
+
+# import time
+import os
+import uuid
 
 import click
-import keyring
 
 from src.db import db
-from src.photo import image
-from src.tasks.tasks import do_your_magic, get_open_tasks
+from src.db import model
+from src.lib import credentials
+from src.lib import images
+from src.lib import instagram
+from src.lib import posts
+from src.lib.tasks import do_your_magic, get_open_tasks
 
 pp = pprint.PrettyPrinter(indent=4)
+
+from dotenv import load_dotenv
+from pathlib import Path
+
+load_dotenv()
 
 
 @click.group()
@@ -19,80 +31,6 @@ def cli(ctx, debug):
 
     ctx.obj["DEBUG"] = debug
 
-
-# menu_obj = {
-#     "Ig": {
-#         "summary": "Post a photo to Instagram1",
-#         "func": lambda: print("This is a test function1"),
-#         "menu": {
-#             "1": {
-#                 "summary": "Post a photo to Instagram",
-#                 "func": lambda: print("photo to Instagram"),
-#             },
-#             "Text 2": {
-#                 "summary": "Get a followers snapshot",
-#                 "func": lambda: print("followers snapshot"),
-#             },
-#         },
-#     },
-#     "Scheduler": {
-#         "summary": "Schedule tasks",
-#         "func": lambda: print("This is another test function"),
-#         "menu": {
-#             "": {
-#                 "summary": "Post a photo to Instagram",
-#                 "func": lambda: print("photo to Instagram"),
-#             },
-#             "Text 2": {
-#                 "summary": "Get a followers snapshot",
-#                 "func": lambda: print("followers snapshot"),
-#             },
-#         },
-#     },
-#     "Tests": {
-#         "summary": "Test Tasks",
-#         "func": lambda: print("This is another test function"),
-#         "menu": {
-#             "": {
-#                 "summary": "Test Ig Account Login",
-#                 "func": lambda: print("photo to Instagram"),
-#             },
-#             "Text 2": {
-#                 "summary": "Test scheduled images path",
-#                 "func": lambda: print("followers snapshot"),
-#             },
-#         },
-#     },
-#     "Playground": {
-#         "summary": "Tests with files/account",
-#         # "func": lambda: print("This is another test function"),
-#         "menu": {
-#             "None1": {
-#                 "summary": "Create DB",
-#                 "func": db.create_db,
-#                 # "func_args": {"db_file": "$(HOME)/.igpost/igpost.db"},
-#             },
-#             "None2": {
-#                 "summary": "Upgrade DB",
-#                 "func": db.upgrade_db,
-#             },
-#         },
-#     },
-#     "Config": {
-#         "summary": "Setup and configure your account",
-#         # 'func': _menu_config,
-#         "menu": {
-#             "Ig Account": {
-#                 "summary": "Setup Account",
-#                 "func": lambda: print("This is a test function"),
-#             },
-#             "Text 2": {
-#                 "summary": "This is another summary",
-#                 "func": lambda: print("This is another test function"),
-#             },
-#         },
-#     },
-# }
 
 menu_obj = [
     {
@@ -162,6 +100,33 @@ menu_obj = [
         ],
     },
     {
+        "key": "Image/Post",
+        "summary": "Operations related to Image/Post",
+        "func": lambda: print("This is another test function"),
+        "menu": [
+            {
+                "summary": "List Images",
+                "func": lambda: print("List Images"),
+                # "func_args": ["db_file": "$(HOME)/.igpost/igpost.db"],
+            },
+            {
+                "summary": "Insert Image",
+                "func": lambda: print("Insert Image"),
+                # "func_args": ["db_file": "$(HOME)/.igpost/igpost.db"],
+            },
+            {
+                "summary": "Process Image",
+                "func": lambda: print("Process Image"),
+                # "func_args": ["db_file": "$(HOME)/.igpost/igpost.db"],
+            },
+            {
+                "summary": "Process Unprocessed",
+                "func": images.process_unprocessed,
+                # "func_args": ["db_file": "$(HOME)/.igpost/igpost.db"],
+            },
+        ],
+    },
+    {
         "key": "Setup",
         "summary": "Setup and configure your account",
         # 'func': _menu_config,
@@ -185,7 +150,6 @@ menu_obj = [
 @click.argument("p2", required=False)
 @click.argument("p3", required=False)
 def menu(ctx, p1=None, p2=None, p3=None):
-
     cur_menu = menu_obj
     for p in [p1, p2, p3]:
         if p is not None:
@@ -231,159 +195,160 @@ def _menu(menu_obj):
         _menu(current_item["menu"])
 
 
-@cli.command()
-@click.pass_context
-def menu_config(ctx):
-    # print(menu_obj['Config'])
-    # return _menu(menu_obj["Config"]["menu"])
-    pass
+# @cli.command()
+# @click.pass_context
+# def menu_config(ctx):
+#     # print(menu_obj['Config'])
+#     # return _menu(menu_obj["Config"]["menu"])
+#     pass
 
 
 @cli.group("ig")
-def cli1_1():
+def g_ig():
     pass
 
 
 @cli.group("scheduler")
-def cli1_2():
+def g_scheduler():
     pass
 
 
 @cli.group("tests")
-def cli1_3():
+def g_tests():
+    pass
+
+
+@cli.group("post_image")
+def g_post_image():
     pass
 
 
 @cli.group("playground")
-def cli1_4():
+def g_play():
     pass
 
 
-@cli.group("config")
-def cli1_5():
-    pass
+# @cli.group("config")
+# def g_play():
+#     pass
 
 
-@cli1_4.command()
+@g_ig.command()
+# @click.argument("filename")
+def set_pw():
+    raise NotImplementedError()
+    # credentials.save_ig_cred("madpin", "password")
+
+
+@g_ig.command()
+@click.option("--username", "-u", required=True)
+# @click.option("--password", "-p", required=True)
+def get_pw(username):
+    passw = credentials.get_ig_cred(username)
+    print(passw)
+    print("final")
+
+
+@g_ig.command()
+@click.option("--post_id", "-p", required=True)
+@click.option("--username", "-u", required=True)
+# @click.option("--password", "-p", required=True)
+def publish(post_id, username):
+    media_info = instagram.publish(post_id=post_id, username=username)
+    print(media_info)
+
+
+@g_ig.command()
+@click.option("--post_id", "-p", required=True)
+def demo_publish(post_id):
+    with db.Session() as session:
+        post = session.query(model.Post).filter(model.Post.id == post_id).first()
+
+        for image in post.images:
+            click.echo(images.image_chars(image.original_filepath))
+        click.echo(post.title)
+        click.echo(post.text)
+        click.echo('\n'.join(posts.get_comments(post)))
+
+
+@g_post_image.command()
+@click.argument("filename", required=False)
+def create_image(filename=None):
+    if filename is None:
+        filename = click.prompt("Please the image Filename")
+        filename = filename.strip("'")
+
+    if not os.path.exists(filename):
+        click.echo(f"File {filename} does not exist")
+        return
+
+    img = images.create_image(filename)
+
+
+@g_post_image.command()
+@click.option("--filename", "-f", required=True)
+@click.option("--title", "-t", required=True)
+@click.option("--post_txt", "-p", default=None, show_default=True)
+@click.option("--location", "-l", default="Dublin, Ireland", show_default=True)
+@click.option("--username", "-u", default="madindub", show_default=True)
+def create_post_image(filename, title, post_txt, location, username):
+    if filename is None:
+        filename = click.prompt("Please the image Filename")
+        filename = filename.strip("'")
+
+    if not os.path.exists(filename):
+        click.echo(f"File {filename} does not exist")
+        return
+
+    if title is None:
+        title = click.prompt("Please enter the title")
+    # if post_txt is None:
+    #     post_txt = click.prompt("Please enter the post content")
+
+    posts.create_default_post(
+        image_path=filename,
+        title=title,
+        post_txt=post_txt,
+        location=location,
+        username=username,
+    )
+
+
+# @cli1_5.command()
+# @click.argument("filename")
+# def create_image(filename):
+#     img = image.create_image(filename)
+
+
+@g_play.command()
 @click.argument("filename")
 def exif_info(filename):
-    exif_data = image.exif_info(filename)
+    exif_data = images.exif_info(filename)
     pp.pprint(exif_data)
 
 
-@cli1_4.command()
+@g_play.command()
 # @click.argument("filename")
 def print_in_console():
-
-    # converts the image to print in terminal
-    # inform of ANSI Escape codes
-    # click.echo()
-
-    images = image.get_all_images()
+    images = images.get_all_images()
     print(len(images))
     from prettytable import PrettyTable
-    COLUMNS_NUM = 3
-    
+
+    COLUMNS_NUM = 6
 
     t = PrettyTable(f"Column {i+1}" for i in range(COLUMNS_NUM))
 
     arr = []
     for i, img in enumerate(images):
-        if(img.notes is None):
-            bitmap = image.cli_print(img.original_filepath)
-            image.save_bitmap(img, bitmap)
+        if img.notes is None:
+            bitmap = images.image_chars(img.original_filepath)
+            images.save_bitmap(img, bitmap)
         else:
             bitmap = img.notes
         arr.append(f"Image Id: {img.id}\n" + bitmap)
-        if (i+1) % COLUMNS_NUM == 0 and len(arr) > 0:
+        if (i + 1) % COLUMNS_NUM == 0 and len(arr) > 0:
             t.add_row(arr)
             arr = []
     if len(arr) > 0:
-        t.add_row(arr+['']*(COLUMNS_NUM-len(arr)))
+        t.add_row(arr + [""] * (COLUMNS_NUM - len(arr)))
     print(t)
-
-
-# @g1_2.command()
-# def menu_test():
-#     obj = {
-#         'Text 1': {
-#             'summary': 'This is a summary',
-#             'func': lambda: print('This is a test function')
-#         },
-#         'Text 2': {
-#             'summary': 'This is another summary',
-#             'func': lambda: print('This is another test function')
-#         },
-#     }
-
-#     for i, (key, value) in enumerate(obj.items()):
-#         i += 1
-#         click.echo(f"{i}: {key} - {value['summary']}")
-#     c1 = int(click.getchar())
-#     # click.echo(list(obj.items())[c1-1])
-#     click.echo(list(obj.values())[c1-1]['func']())
-
-
-# @g1_2.command()
-# def get_keyring():
-#     print("Keyring method: " + str(keyring.get_keyring()))
-
-
-# @g1_2.command()
-# def set_password():
-#     # the service is just a namespace for your app
-#     service_id = 'IM_YOUR_APP!'
-
-#     username = 'dustin'
-
-#     # optionally, abuse `set_password` to save username onto keyring
-#     # we're just using some known magic string in the username field
-#     keyring.set_password(service_id, "username", username)
-
-#     # save password
-#     keyring.set_password(service_id, username, "password")
-
-
-# @g1_2.command()
-# def get_passwords():
-#     service_id = 'IM_YOUR_APP!'
-
-#     username = keyring.get_password(service_id, "username")
-#     password = keyring.get_password(service_id, username)
-#     click.echo(f"username: {username}")
-#     click.echo(f"password: {password}")
-
-
-# @g1_1.command()
-# # @g1_1.pass_context
-# def cli3(ctx):
-#     click.echo('This is the 3!')
-
-
-# @g1_1.command()
-# # @g1_1.pass_context
-# def cli2(ctx):
-#     """Example script."""
-#     click.clear()
-
-#     click.echo('Hello World!')
-#     click.secho('Some more text', bg='blue', fg='white')
-
-#     click.echo('Continue? [yn] ', nl=False)
-#     while True:
-#         c = click.getchar()
-#         click.echo()
-#         if c == 'y':
-#             click.echo('We will go on')
-#             break
-#         elif c == 'n':
-#             click.echo('Abort!')
-#             break
-#         else:
-#             click.echo('Invalid input :(')
-#     l = list(range(10))
-#     with click.progressbar([1, 2, 3], label='Modifying user accounts',
-#                            ) as bar:
-#         for x in bar:
-#             # print(f"sleep({x})...")
-#             time.sleep(x)

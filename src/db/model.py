@@ -64,6 +64,34 @@ post_hashtag_group = Table(
 # )
 
 
+class PostPublish(Base):
+    __tablename__ = "post_publish"
+    id = Column(Integer, primary_key=True)
+    created_at = Column(
+        DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    notes = Column(String)
+    deleted_at = Column(DateTime, nullable=True, default=None)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+
+    post_id = Column(Integer, ForeignKey("post.id"))
+    post = relationship("Post", backref=backref("post_publish"))
+
+    account_id = Column(Integer, ForeignKey("account.id"))
+    account = relationship("Account", backref=backref("post_publish"))
+    ig_pk = Column(String)
+    ig_id = Column(String)
+    ig_code = Column(String)
+    ig_media_type = Column(String)
+    ig_thumbnail_url = Column(String)
+    ig_raw_return = Column(String)
+
+
 class Post(Base):
     __tablename__ = "post"
     id = Column(Integer, primary_key=True)
@@ -78,14 +106,25 @@ class Post(Base):
     deleted_at = Column(DateTime, nullable=True, default=None)
     is_deleted = Column(Boolean, nullable=False, default=False)
     notes = Column(String)
+    title = Column(String)
     text = Column(String)
     location = Column(String)
     gps_lat = Column(Float)
     gps_long = Column(Float)
 
+    comment1_type = Column(Enum("images_info", "hashtags", "text", "none"))
+    comment1_content = Column(String)
+    comment1_done = Column(Boolean, nullable=False, default=False)
+    comment2_type = Column(Enum("images_info", "hashtags", "text", "none"))
+    comment2_content = Column(String)
+    comment2_done = Column(Boolean, nullable=False, default=False)
+    comment3_type = Column(Enum("images_info", "hashtags", "text", "none"))
+    comment3_content = Column(String)
+    comment3_done = Column(Boolean, nullable=False, default=False)
+
     images = relationship("Image", secondary=post_image, backref="post")
     accounts = relationship("Account", secondary=post_account, backref="posts")
-    hashtag_group = relationship(
+    hashtag_groups = relationship(
         "HashtagGroup", secondary=post_hashtag_group, backref="posts"
     )
 
@@ -107,6 +146,9 @@ class Image(Base):
     deleted_at = Column(DateTime, nullable=True, default=None)
     is_deleted = Column(Boolean, nullable=False, default=False)
     notes = Column(String)
+    processed_at = Column(DateTime, nullable=True, default=None)
+    error = Column(Boolean, default=False)
+
     original_filename = Column(String)
     original_filepath = Column(String)
     exposure_program = Column(String)
@@ -197,6 +239,41 @@ class Account(Base):
 
 
 event.listen(Account.__table__, "after_create", after_create_post)
+
+
+class Follower(Base):
+    __tablename__ = "follower"
+    id = Column(Integer, primary_key=True)
+    created_at = Column(
+        DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    deleted_at = Column(DateTime, nullable=True, default=None)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    notes = Column(String)
+    ig_id = Column(String)
+    username = Column(String)
+    fullname = Column(String)
+    profile_pic = Column(String)
+    profile_pic = Column(String)
+    is_private = Column(Boolean)
+    account_id = Column(ForeignKey("account.id"), nullable=False, index=True)
+    account = relationship(
+        "Account",
+        innerjoin=True,
+        backref=backref(
+            "followers",
+            cascade="all, delete-orphan",
+            innerjoin=True,
+        ),
+    )
+
+
+event.listen(Follower.__table__, "after_create", after_create_post)
 
 
 class Task(Base):
